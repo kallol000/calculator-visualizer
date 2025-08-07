@@ -1,17 +1,19 @@
 "use client"
 import Image from "next/image";
 import { useState, useEffect, ReactNode } from "react";
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence, stagger } from "motion/react"
 import { FormData } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { isOperand, precedence } from "@/lib/helperFns";
+import { infixToPostfix } from "@/lib/helperFns";
+import { exit } from "process";
 
 
 
 
 export default function Home() {
   
+  const [ stack, setStack ] = useState<string[]>( ["a", "b", "c", "d", "e", "f"] )
   const [ boxes, setBoxes ] = useState<ReactNode[]>( [] )
   const [ stack, setStack ] = useState<string[]>( ["a", "b", "c", "d", "e", "a", "b", "c", "d", "e"] )
   const [ formData, setFormData ] = useState<FormData>( {
@@ -42,80 +44,83 @@ export default function Home() {
   useEffect( () => {
     if ( stack ) {
       setBoxes( prev => 
-        // setTimeout()
-        stack.map( (item, index) =>
-          <motion.li
-              key={index}
-              variants={itemVariants}
-              // initial="initial"
-              // animate="animate"
-              exit="exit"
-              layout // this helps keep layout smooth
-              style={{
-                listStyle: 'none',
-                marginBottom: '10px',
-                background: '#eee',
-                padding: '8px',
-                borderRadius: '4px',
-              }}
-            >
-              {item}
-            </motion.li>
+        stack.map( (elem, index) =>
+          <motion.div
+            key={index}
+            variants={childVariant}
+            
+          >
+            <div className="h-[50px] w-[300px] bg-sky-500">{elem}</div>
+          </motion.div>
         )
       )
     }
   }, [ stack ] )
   
 
+  console.log(stack)
 
-  // const handleInfixtoPostfix = () => {
 
-  //   const delay = 600;
+  const handleInfixtoPostfix = () => {
 
-  //   let delayCount = 0;
-  
-  //   for ( let i = 0; i < formData.input.length; i++ ) {
-    //     if ( formData.input[ i ] === "(" || formData.input[ i ] === ")" || formData.input[ i ] === "*" || formData.input[ i ] === "/" ) {
-      //       setTimeout( () => {
-        //         setStack( prev => {
-  //           const result = [ ...prev, formData.input[ i ] ]
-  //           return result
-  //         })
-  //       }, delayCount * delay)
-  //       delayCount++
-  //     }
-  //   }
-  // }
-  
-
-  const handleInfixToPostfix = () => {
-    setStack(prev => [...prev].slice(0, prev.length - 1))
+    setStack(prev => prev.slice(0, -1))
   }
 
   const handleInputChange = () => {
 
   }
 
+  const parentVariant = {
+    hidden: {
+      opacity: 0,
+      transition: {
+        when: "beforeChildren",
+        duration: 1
+      }
+    },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "afterChildren",
+        delayChildren: stagger(.3)
+      }
+    },
+    exit: {
+      opacity: 0,
+      transition: {
+        duration: .5
+      }
+    }
+    
+  }
+
+  const childVariant = {
+    hidden: {opacity: 0},
+    visible: {opacity: 1, transition: {duration: .5}},
+    exit: {opacity: 0, transition: {duration: .5}},
+
+  }
+
+
+
   return (
     <div className="p-4">
-      <div className="relative flex flex-col-reverse gap-4 h-[600px] w-[400px] bg-sky-100">
-        <motion.ul
-           variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          style={{ padding: 0 }}
+      <AnimatePresence>
+        <motion.div
+          className="relative flex flex-col-reverse gap-4 h-[600px] w-[400px] bg-sky-100"
+          variants = {parentVariant}
+          initial = "hidden"
+          animate = "visible"
+          exit = "exit"
+          key = "111"
         >
-          <AnimatePresence>
             {boxes}
-          </AnimatePresence>
-
-        </motion.ul>
-
+        </motion.div>
+      </AnimatePresence>  
         {/* <motion.div delayChil> */}
         {/* </motion.div> */}
 
 
-      </div>
       <Input className="w-100" placeholder="" value={ formData.input } onChange={handleInputChange} />
       <Button onClick={ handleInfixToPostfix }>Convert</Button>
       <div>Postfix: { formData.postfix }</div>
