@@ -1,6 +1,6 @@
 // This function returns the relative precedance of the operators we have
 // e.g divide (/) has higher precedance than multiply (*)
-function precedence (c:string):number {
+export function precedence (c:string):number {
     if (c == '^') {
         return 3;
     }
@@ -16,7 +16,7 @@ function precedence (c:string):number {
 }
 
 //Function check whether the given character is Operand or not
-function isOperand (c:string) {
+export function isOperand (c:string) {
 	if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
 		return 1;
 	}
