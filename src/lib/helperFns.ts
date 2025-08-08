@@ -24,8 +24,8 @@ export function isOperand (c:string) {
 }
 
 //Function for converting a infix expression to postfix expression
-export function infixToPostfix (s:string, st:string[]) {
-    // const st:string[] = []; 
+export function infixToPostfix (s:string) {
+    const stack:string[] = []; 
     let postFix = "";
 
     for (let i = 0; i < s.length; i++) {
@@ -33,27 +33,27 @@ export function infixToPostfix (s:string, st:string[]) {
             postFix += s[i];
         }
         else if (s[i] == '(') {
-            st.push('(');
+            stack.push('(');
         }
         else if (s[i] == ')') {
-            while (st[st.length - 1] != '(') {
-                postFix += st[st.length - 1];
-                st.pop();
+            while (stack[stack.length - 1] != '(') {
+                postFix += stack[stack.length - 1];
+                stack.pop();
             }
-            st.pop();
+            stack.pop();
         }
         else {
-            while (st.length != 0 && precedence(s[i]) <= precedence(st[st.length - 1])) {
-                postFix += st[st.length - 1];
-                st.pop();
+            while (stack.length != 0 && precedence(s[i]) <= precedence(stack[stack.length - 1])) {
+                postFix += stack[stack.length - 1];
+                stack.pop();
             }
-            st.push(s[i]);
+            stack.push(s[i]);
         }
     }
 
-    while (st.length != 0) {
-        postFix += st[st.length - 1];
-        st.pop();
+    while (stack.length != 0) {
+        postFix += stack[stack.length - 1];
+        stack.pop();
     }
 
     return postFix

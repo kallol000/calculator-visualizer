@@ -1,5 +1,5 @@
 export interface FormData {
     input: string
-    postfix: string | null
+    postFix: string | null
     answer: number | null
 }

@@ -5,41 +5,20 @@ import { motion, AnimatePresence, stagger } from "motion/react"
 import { FormData } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { infixToPostfix } from "@/lib/helperFns";
-import { exit } from "process";
+import { infixToPostfix, isOperand, precedence } from "@/lib/helperFns";
 
 
 
 
 export default function Home() {
   
-  const [ stack, setStack ] = useState<string[]>( ["a", "b", "c", "d", "e", "f"] )
+  const [ stack, setStack ] = useState<string[]>( [] )
   const [ boxes, setBoxes ] = useState<ReactNode[]>( [] )
-  const [ stack, setStack ] = useState<string[]>( ["a", "b", "c", "d", "e", "a", "b", "c", "d", "e"] )
   const [ formData, setFormData ] = useState<FormData>( {
     input: "K+L-M*N+(O^P)*W/U/V*T+Q",
-    postfix: "",
+    postFix: "",
     answer: null
   } )  
-  
-  
-    const containerVariants = {
-      hidden: {},
-      visible: {
-        transition: {
-          staggerChildren: 0.3, // delay between each item
-          when: "beforeChildren",
-        },
-      },
-    }
-
-  
-  const itemVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  }
-  
 
   useEffect( () => {
     if ( stack ) {
@@ -47,7 +26,10 @@ export default function Home() {
         stack.map( (elem, index) =>
           <motion.div
             key={index}
-            variants={childVariant}
+            variants={ childVariant }
+            initial="hidden"
+            animate="visible"
+            exit = "hidden"
             
           >
             <div className="h-[50px] w-[300px] bg-sky-500">{elem}</div>
@@ -60,12 +42,50 @@ export default function Home() {
 
   console.log(stack)
 
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const handleInfixtoPostfix = () => {
+  const handleInfixToPostfix = async () => {
+    const input = formData.input
+    let localPostFix = "";
+    const tempStack = [ ...stack ]
 
-    setStack(prev => prev.slice(0, -1))
+    for ( let i = 0; i < input.length; i++ ) {
+      const char = input[i]
+        if (isOperand(char)) {
+          localPostFix += char;
+          setFormData( prev => ( { ...prev, postfix: localPostFix } ) )
+          await delay(300);
+        }
+        else if (char == '(') {
+          tempStack.push( '(' );
+          setStack([...tempStack]); // trigger animation
+          await delay(300);
+        }
+        else if (char == ')') {
+            while (tempStack[tempStack.length - 1] != '(') {
+                localPostFix += tempStack[tempStack.length - 1];
+                tempStack.pop();
+            }
+            tempStack.pop();
+        }
+        else {
+            while (tempStack.length != 0 && precedence(char) <= precedence(tempStack[tempStack.length - 1])) {
+                localPostFix += tempStack[tempStack.length - 1];
+                tempStack.pop();
+            }
+            tempStack.push(char);
+        }
+    }
+
+    // while (tempStack.length != 0) {
+    //     localPostFix += tempStack[tempStack.length - 1];
+    //     tempStack.pop();
+    // }
+
+    setStack(prev => tempStack)
   }
 
+  console.log(stack)
   const handleInputChange = () => {
 
   }
@@ -85,19 +105,12 @@ export default function Home() {
         delayChildren: stagger(.3)
       }
     },
-    exit: {
-      opacity: 0,
-      transition: {
-        duration: .5
-      }
-    }
     
   }
 
   const childVariant = {
     hidden: {opacity: 0},
-    visible: {opacity: 1, transition: {duration: .5}},
-    exit: {opacity: 0, transition: {duration: .5}},
+    visible: { opacity: 1, transition: { duration: .5 } },
 
   }
 
@@ -105,25 +118,21 @@ export default function Home() {
 
   return (
     <div className="p-4">
-      <AnimatePresence>
         <motion.div
           className="relative flex flex-col-reverse gap-4 h-[600px] w-[400px] bg-sky-100"
           variants = {parentVariant}
           initial = "hidden"
           animate = "visible"
-          exit = "exit"
-          key = "111"
-        >
+          >
+          <AnimatePresence>
             {boxes}
+          </AnimatePresence>   
         </motion.div>
-      </AnimatePresence>  
-        {/* <motion.div delayChil> */}
-        {/* </motion.div> */}
 
 
-      <Input className="w-100" placeholder="" value={ formData.input } onChange={handleInputChange} />
+      <Input className="w-100" placeholder="" value={ formData.input } onChange={ handleInputChange } />
       <Button onClick={ handleInfixToPostfix }>Convert</Button>
-      <div>Postfix: { formData.postfix }</div>
+      <div>postFix: { formData.postFix }</div>
       
     </div>
   );
